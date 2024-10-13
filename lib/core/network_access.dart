@@ -30,3 +30,23 @@ Future<Map<String, List<Map<String, dynamic>>>> fetchAndGroupBooks(apiEnd) async
     throw Exception('Error: $e');
   }
 }
+Future<List<dynamic>> fetchData(apiEnd) async {
+  print('$getData/$apiEnd');
+  final url = Uri.parse('$getData/$apiEnd');
+  try {
+    final response = await http.get(url,headers: headers);
+    if (response.statusCode == 200) {
+      print(response.body);
+      final data = json.decode(response.body);
+      print(data);
+
+      List<dynamic> books = data['Data'];
+      return books;
+
+    } else {
+      throw Exception('Failed to load data');
+    }
+  } catch (e) {
+    throw Exception('Error: $e');
+  }
+}

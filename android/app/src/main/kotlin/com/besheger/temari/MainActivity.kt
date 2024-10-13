@@ -1,4 +1,4 @@
-package com.besheger.temari
+package com.besheger.learn
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -32,26 +32,29 @@ class _NetworkPdfViewerState extends State<NetworkPdfViewer> {
   Future<void> _loadPdf() async {
     // Check if the file is already saved locally
     Directory documentsDir = await getApplicationDocumentsDirectory();
-    File localFile = File('${documentsDir.path}/${widget.book.title}.pdf');
+    File localFile = File('${documentsDir.path}/${widget.book.grade}');
+     print('check if the file is loaded ${documentsDir.path}/${widget.book.grade}');
 
     if (await localFile.exists()) {
       // File exists, load from local storage
       setState(() {
         _filePath = localFile.path;
       });
-      print("Loaded PDF from local storage: ${localFile.path}");
+      // print("Loaded PDF from local storage: ${localFile.path}");
     } else {
       // File does not exist, download from the network
+      //print(widget.book.title);
       try {
         var response = await http.get(Uri.parse(widget.book.pdfUrl));
         var bytes = response.bodyBytes;
 
         // Save file to local storage
+        //print('Print File');
         await localFile.writeAsBytes(bytes, flush: true);
         setState(() {
           _filePath = localFile.path;
         });
-        print("Downloaded and saved PDF to local storage: ${localFile.path}");
+        //print("Downloaded and saved PDF to local storage: ${localFile.path}");
       } catch (e) {
         print('Error loading PDF: $e');
       }
@@ -78,7 +81,7 @@ class _NetworkPdfViewerState extends State<NetworkPdfViewer> {
         title: Text(widget.book.title),
       ),
       body: _filePath.isEmpty
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : PDFView(
         filePath: _filePath,
         enableSwipe: true,
@@ -86,22 +89,22 @@ class _NetworkPdfViewerState extends State<NetworkPdfViewer> {
         autoSpacing: false,
         pageFling: false,
         defaultPage: _currentPage!,
-        onRender: (_pages) {
-          setState(() {
-            _totalPages = _pages;
-            _isReady = true;
-          });
-        },
-        onViewCreated: (PDFViewController pdfViewController) {
-          _pdfViewController = pdfViewController;
-        },
-        onPageChanged: (page, total) {
-          setState(() {
-            _currentPage = page;
-          });
-          _saveLastPage(page!); // Save current page for this book
-        },
-      ),
+              onRender: (_pages) {
+                setState(() {
+                  _totalPages = _pages;
+                  _isReady = true;
+                });
+              },
+              onViewCreated: (PDFViewController pdfViewController) {
+                _pdfViewController = pdfViewController;
+              },
+              onPageChanged: (page, total) {
+                setState(() {
+                  _currentPage = page;
+                });
+                _saveLastPage(page!); // Save current page for this book
+              },
+            ),
     );
   }
 }

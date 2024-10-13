@@ -1,9 +1,9 @@
-const localIp='http://10.6.120.238';
+const localIp='http://192.168.0.7';
 const port='3000';
 const local='$localIp:$port';
-const remote='https://learn.besheger.com';
+const remote='https://temari.besheger.com';
 
-const base=local;
+const base=remote;
 
 const getData='$base/get/data';
 const postData='$base/post/data';

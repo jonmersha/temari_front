@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:temari/core/network_access.dart';
 import 'package:temari/features/bookListPage.dart';
 
@@ -18,7 +16,7 @@ class _BooksPageState extends State<BooksPage> {
   @override
   void initState() {
     super.initState();
-    groupedBooksFuture = fetchAndGroupBooks('4');
+    groupedBooksFuture = fetchAndGroupBooks('3');
   }
 
 
@@ -28,7 +26,7 @@ class _BooksPageState extends State<BooksPage> {
       appBar: AppBar(
       actions: [IconButton(onPressed: (){
         setState(() {
-          groupedBooksFuture = fetchAndGroupBooks('4');
+          groupedBooksFuture = fetchAndGroupBooks('3');
 
         });
       }, icon: Icon(Icons.refresh))],
@@ -72,32 +70,3 @@ class _BooksPageState extends State<BooksPage> {
   }
 }
 
-// class BookListPage extends StatelessWidget {
-//   final String regionName;
-//   final List<Map<String, dynamic>> books;
-//
-//   BookListPage({required this.regionName, required this.books});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('Books in $regionName'),
-//       ),
-//       body: ListView.builder(
-//         itemCount: books.length,
-//         itemBuilder: (context, index) {
-//           var book = books[index];
-//           return ListTile(
-//             title: Text(book['title']),
-//             subtitle: Text(book['name_am']),
-//             onTap: () {
-//               // You can handle book tap here (e.g., opening PDF)
-//               print(book['']);
-//             },
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
