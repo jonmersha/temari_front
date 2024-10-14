@@ -57,7 +57,6 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 NewsHome(),
-
                 studentTextGridView(groupedBooks,screenWidth),
                 ReadHistoryHome()
               ],

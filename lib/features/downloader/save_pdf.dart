@@ -178,7 +178,7 @@ class _SaveFileState extends State<SaveFile> {
     super.initState();
     setState(() {
       _fetchExistingFiles();
-      startParallelDownload('${widget.book['textbook_subject']}.pdf', '$base/${widget.book['textbook_url']}', 4);
+      startParallelDownload('${widget.book['book_name']}', '$base/${widget.book['textbook_url']}', 4);
     });
   }
 
