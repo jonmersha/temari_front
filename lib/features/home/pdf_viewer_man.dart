@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:temari/core/admob/banner.dart';
 
 class PdfViewerImp extends StatefulWidget {
   final fileName;
@@ -31,25 +32,9 @@ class _PdfViewerImpState extends State<PdfViewerImp> {
       setState(() {
         _filePath = localFile.path;
       });
-      print("Loaded PDF from local storage: ${localFile.path}");
+     // print("Loaded PDF from local storage: ${localFile.path}");
     }
-    //else
-    // {
-    //   // File does not exist, download from the network
-    //   try {
-    //     //var response = await http.get(Uri.parse(widget.book.pdfUrl));
-    //     //var bytes = response.bodyBytes;
-    //
-    //     // Save file to local storage
-    //     await localFile.writeAsBytes(bytes, flush: true);
-    //     setState(() {
-    //       _filePath = localFile.path;
-    //     });
-    //     print("Downloaded and saved PDF to local storage: ${localFile.path}");
-    //   } catch (e) {
-    //     print('Error loading PDF: $e');
-    //   }
-    // }
+
   }
 
   Future<void> _loadLastPage() async {
@@ -72,17 +57,17 @@ class _PdfViewerImpState extends State<PdfViewerImp> {
     _loadPdf();
     _loadLastPage();
   }
-  // @override
-  // Widget build(BuildContext context) {
-  //   return const Placeholder();
-  // }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(widget.fileName),
-      // ),
+      appBar: AppBar(
+        //title: Text(widget.fileName),
+        actions: [
+          BannerAdds()
+        ],
+      ),
       body: _filePath.isEmpty
           ? Center(child: CircularProgressIndicator())
           : PDFView(
@@ -95,7 +80,9 @@ class _PdfViewerImpState extends State<PdfViewerImp> {
         onRender: (_pages) {
           setState(() {
             _totalPages = _pages;
+            print("Total Page$_pages File Path $_filePath");
             _isReady = true;
+            ///Do operations of sending the file oopened and
           });
         },
         onViewCreated: (PDFViewController pdfViewController) {

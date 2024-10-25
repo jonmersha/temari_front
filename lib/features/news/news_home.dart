@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:temari/core/network_access.dart';
+import 'package:temari/core/utils/network_access.dart';
 
 class NewsHome extends StatefulWidget {
   const NewsHome({super.key});
@@ -16,7 +16,7 @@ class _NewsHomeState extends State<NewsHome> {
     super.initState();
     setState(() {
       data = fetchData('9');
-      print(data);
+      //print(data);
     });
   }
 
@@ -30,11 +30,11 @@ class _NewsHomeState extends State<NewsHome> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No News posted ...'));
+            return Center();
           }
           List<dynamic> newsData = snapshot.data!;
           return (newsData.length == 0)
-              ? Container(child: Text('No Recent News'))
+              ? Container()
               : Column(
             crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

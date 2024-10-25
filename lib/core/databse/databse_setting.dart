@@ -15,38 +15,46 @@ class FileDatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'file_info.db');
+    String path = join(await getDatabasesPath(), 'book_info.db');
     return await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) {
         return db.execute('''
           CREATE TABLE files(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            file_name TEXT NOT NULL,
-            file_size INTEGER NOT NULL,
-            download_date TEXT NOT NULL
+            textbook_id INTEGER PRIMARY KEY,
+            textbook_title TEXT NOT NULL,
+            book_name TEXT NOT NULL,
+            category TEXT NOT NULL,
+            provider_logo TEXT NOT NULL,
+            textbook_subject TEXT NOT NULL,
+            textbook_grade INTEGER,
+            textbook_description TEXT NOT NULL,
+            textbook_isbn TEXT NOT NULL,
+            textbook_image_url TEXT NOT NULL,
+            textbook_url TEXT NOT NULL,
+            provider_id INTEGER,
+            provider_name TEXT NOT NULL,
+            region_id INTEGER,
+            region_name TEXT NOT NULL,
+            textbook_created_at TEXT NOT NULL,
+            textbook_updated_at TEXT NOT NULL
           )
         ''');
       },
     );
   }
-
-  Future<void> insertFile(String fileName, int fileSize, String downloadDate) async {
+  Future<void> insertBook(dynamic book) async {
     final db = await database;
-    await db.insert('files', {
-      'file_name': fileName,
-      'file_size': fileSize,
-      'download_date': downloadDate,
-    });
+    await db.insert('files', book);
   }
 
-  Future<Map<String, dynamic>?> getFile(String fileName) async {
+  Future<Map<String, dynamic>?> getBook(String bookName) async {
     final db = await database;
     final result = await db.query(
       'files',
-      where: 'file_name = ?',
-      whereArgs: [fileName],
+      where: 'book_name = ?',
+      whereArgs: [bookName],
     );
     if (result.isNotEmpty) {
       return result.first;
@@ -60,6 +68,10 @@ class FileDatabaseHelper {
   Future<void> deleteFile(int id) async {
     final db = await database;
     await db.delete('files', where: 'id = ?', whereArgs: [id]);
+  }
+  Future<void> deleteBook(int id) async {
+    final db = await database;
+    await db.delete('files', where: 'textbook_id = ?', whereArgs: [id]);
   }
 }
 

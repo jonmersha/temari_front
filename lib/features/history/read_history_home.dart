@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:temari/core/network_access.dart';
+import 'package:temari/core/utils/network_access.dart';
 
 class ReadHistoryHome extends StatefulWidget {
   const ReadHistoryHome({super.key});

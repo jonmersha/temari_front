@@ -1,7 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:temari/core/auth/data/network_access.dart';
+import 'package:temari/core/auth/result.dart';
 import 'package:temari/core/utils/country_list.dart';
-
+import 'package:temari/core/utils/navigation.dart';
 import 'data/UserModel.dart';
 
 class UpdateUserForm extends StatefulWidget {
@@ -16,10 +19,10 @@ class UpdateUserForm extends StatefulWidget {
 }
 
 class _UpdateUserFormState extends State<UpdateUserForm> {
-  bool isEditable=false;
+  bool isLoading=false;
+  bool isEditable = false;
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _usernameController;
-
   late TextEditingController _firstNameController;
   late TextEditingController _lastNameController;
   late TextEditingController _phoneController;
@@ -28,14 +31,16 @@ class _UpdateUserFormState extends State<UpdateUserForm> {
   late TextEditingController _postalCodeController;
   late TextEditingController _selectedStateController;
 
-  //String? _selectedState;
   String? _selectedCountry;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn googleSignIn = GoogleSignIn();
+  User? _user;
 
   @override
   void initState() {
     super.initState();
     _usernameController = TextEditingController(text: widget.userData.username);
-    //_emailController = TextEditingController(text: widget.userData.email);
     _firstNameController =
         TextEditingController(text: widget.userData.firstName);
     _lastNameController = TextEditingController(text: widget.userData.lastName);
@@ -63,7 +68,7 @@ class _UpdateUserFormState extends State<UpdateUserForm> {
     super.dispose();
   }
 
-  void _updateUser() {
+  Future<void> _updateUser() async {
     if (_formKey.currentState!.validate()) {
       // Perform PUT request to update user information
       Map<String, dynamic> updatedUserData = {
@@ -80,24 +85,39 @@ class _UpdateUserFormState extends State<UpdateUserForm> {
           "postal_code": _postalCodeController.text,
         }
       };
-      //updateTable('19', updatedUserData);
+      performUpdate(4,updatedUserData);
+      //navigateReplace(context: context, page: UpdateResult(updateData: updatedUserData, tableId: 4));
+
       setState(() {
         //check the status
+
       });
     }
   }
 
+  Future<void> performUpdate(int i, Map<String, dynamic> updatedUserData)async {
+    isLoading=true;
+    await updateTable(i, updatedUserData);
+    //if(result)
+    setState(() {
+      isLoading=false;
+      Navigator.pop(context);
+      //navigateReplace(context: context, page: UpdateResult());
+    });
+
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
+    return
+
+      Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
+        child: Column(
           children: [
             Form(
               key: _formKey,
-              child:
-              Column(
+              child: Column(
                 children: [
                   Row(
                     children: [
@@ -106,13 +126,13 @@ class _UpdateUserFormState extends State<UpdateUserForm> {
                         width: 100,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(50),
-                         // color: Colors.red,
+                          // color: Colors.red,
                           image: DecorationImage(
-                            image: NetworkImage('${widget.google.photoURL}'),
-                            fit: BoxFit.fitHeight
-                          ),
+                              image: NetworkImage('${widget.google.photoURL}'),
+                              fit: BoxFit.fitHeight),
                         ),
                       ),
+
                     ],
                   ),
 
@@ -121,35 +141,52 @@ class _UpdateUserFormState extends State<UpdateUserForm> {
                     children: [
                       Text(
                         '${widget.userData.email}',
-                        style: TextStyle(fontSize: 20,),
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
                       ),
                       InkWell(
-                        onTap: (){
+                        onTap: () {
                           setState(() {
-                            isEditable=!isEditable;
-
+                            isEditable = !isEditable;
                           });
                         },
-
-                          child: !isEditable?
-                          Icon(Icons.mode_edit_outline,color: Colors.red,size: 30,):
-                          Icon(Icons.edit_off_outlined,color: Colors.green,size: 30,)
-
-                        ,)
+                        child:  !isEditable
+                            ? Icon(
+                                Icons.mode_edit_outline,
+                                color: Colors.red,
+                                size: 30,
+                              )
+                            : Icon(
+                                Icons.edit_off_outlined,
+                                color: Colors.green,
+                                size: 30,
+                              ),
+                      )
                     ],
                   ),
-                //
-                  SizedBox(
+                  //
+                  const SizedBox(
                     height: 20,
                   ),
-                  if(isEditable)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
-                        onPressed: _updateUser, child: Text('Save change',style: TextStyle(fontWeight: FontWeight.normal,color: Colors.white,fontSize: 18),))
-                  ],),
+                  if (isEditable)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        isLoading?CircularProgressIndicator():
+                        ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.teal),
+                            onPressed: _updateUser,
+                            child: Text(
+                              'Save change',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.normal,
+                                  color: Colors.white,
+                                  fontSize: 18),
+                            ))
+                      ],
+                    ),
                   TextFormField(
                     controller: _usernameController,
                     enabled: isEditable,
@@ -178,7 +215,8 @@ class _UpdateUserFormState extends State<UpdateUserForm> {
                         child: TextFormField(
                           controller: _lastNameController,
                           enabled: isEditable,
-                          decoration: const InputDecoration(labelText: 'Last Name'),
+                          decoration:
+                              const InputDecoration(labelText: 'Last Name'),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your last name';
@@ -244,28 +282,31 @@ class _UpdateUserFormState extends State<UpdateUserForm> {
                     ],
                   ),
 
-                  isEditable?DropdownButtonFormField<String>(
-                    value: _selectedCountry,
-
-                    decoration: const InputDecoration(labelText: 'Country'),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedCountry = newValue;
-                      });
-                    },
-                    items: countries.map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a country';
-                      }
-                      return null;
-                    },
-                  ):Text('Country:  ${widget.userData.country}'),
+                  isEditable
+                      ? DropdownButtonFormField<String>(
+                          value: _selectedCountry,
+                          decoration:
+                              const InputDecoration(labelText: 'Country'),
+                          onChanged: (newValue) {
+                            setState(() {
+                              _selectedCountry = newValue;
+                            });
+                          },
+                          items: countries
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please select a country';
+                            }
+                            return null;
+                          },
+                        )
+                      : Text('Country:  ${widget.userData.country}'),
                   TextFormField(
                     controller: _postalCodeController,
                     enabled: isEditable,
@@ -277,23 +318,14 @@ class _UpdateUserFormState extends State<UpdateUserForm> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 20),
-                  if(isEditable)
-                  ElevatedButton(
-                    onPressed: _updateUser,
-                    child: const Text('Update'),
-                  ),
-                 // Text('Yo),
-                  // MerchantProfile(userData: widget.userData)
-
-                 ],
+                ],
               ),
             ),
-           //MerchantProfile(userData: widget.userData),
-           // Text('Our Work')
+            //MerchantProfile(userData: widget.userData),
+            // Text('Our Work')
           ],
         ),
-      ),
+
     );
   }
 }

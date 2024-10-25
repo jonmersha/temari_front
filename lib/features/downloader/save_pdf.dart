@@ -8,7 +8,7 @@ import 'package:temari/core/databse/databse_setting.dart';
 import 'package:temari/features/home/pdf_viewer_man.dart';
 
 class SaveFile extends StatefulWidget {
- final dynamic book;
+  final dynamic book;
 
   const SaveFile({super.key, required this.book});
 
@@ -59,21 +59,21 @@ class _SaveFileState extends State<SaveFile> {
   }
 
   Future<void> startParallelDownload(
-       String fileName,String url, int partCount) async {
+      String fileName, String url, int partCount) async {
     try {
       // Get the file's information from the database
       FileDatabaseHelper dbHelper = FileDatabaseHelper();
-      final existingFile = await dbHelper.getFile(fileName);
+      final existingFile = await dbHelper.getBook(fileName);
 
       if (existingFile != null) {
-        //ScaffoldMessenger.of(context).showSnackBar(
-           // SnackBar(content: Text("File $fileName already downloaded")));
-        //Navigator.push(context, MaterialPageRoute(builder: builder));
-        Navigator.push(
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //    SnackBar(content: Text("File $fileName already downloaded")));
+        // Navigator.push(context, MaterialPageRoute(builder: builder));
+
+        Navigator.pushReplacement<void, void>(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                PdfViewerImp(fileName: fileName),
+            builder: (context) => PdfViewerImp(fileName: fileName),
           ),
         );
         return; // Skip the download
@@ -82,13 +82,11 @@ class _SaveFileState extends State<SaveFile> {
       // Get the application's directory path
       Directory appDocDir = await getApplicationDocumentsDirectory();
       String savePath = "${appDocDir.path}/$fileName";
-      //print(' URL: $base/$url');
 
       Response response = await dio.head('$url');
       totalFileSize =
           int.parse(response.headers.value(HttpHeaders.contentLengthHeader)!);
-      await dbHelper.insertFile(
-          fileName, totalFileSize, DateTime.now().toIso8601String());
+
       int partSize = totalFileSize ~/ partCount;
       downloadProgress = List.filled(partCount, 0);
       downloadSize = List.filled(partCount, 0);
@@ -97,29 +95,29 @@ class _SaveFileState extends State<SaveFile> {
         int start = i * partSize;
         int end =
             (i == partCount - 1) ? totalFileSize - 1 : start + partSize - 1;
-
         downloadFutures.add(downloadPart(url, savePath, start, end, i));
       }
       await Future.wait(downloadFutures);
       await mergeParts(savePath, partCount);
-      setState(() {
+      await dbHelper.insertBook(widget.book);
+      //setState(() async {
         downloadedFiles.add(fileName);
-        _fetchExistingFiles();
-        Navigator.push(
+        // _fetchExistingFiles();
+        Navigator.pushReplacement<void, void>(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                PdfViewerImp(fileName: fileName),
+            builder: (context) => PdfViewerImp(fileName: fileName),
           ),
         );
-      });
+     // });
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Download completed! File saved at $savePath")));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Download completed!")));
     } catch (e) {
       print("Error occurred: $e");
       ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Download failed: $e")));
+          .showSnackBar(SnackBar(content: Text("Download failed")));
+      Navigator.pop(context);
     }
   }
 
@@ -177,8 +175,9 @@ class _SaveFileState extends State<SaveFile> {
   void initState() {
     super.initState();
     setState(() {
-      _fetchExistingFiles();
-      startParallelDownload('${widget.book['book_name']}', '$base/${widget.book['textbook_url']}', 4);
+      //_fetchExistingFiles();
+      startParallelDownload('${widget.book['book_name']}',
+          '${widget.book['textbook_url']}', 4);
     });
   }
 
@@ -250,60 +249,6 @@ class _SaveFileState extends State<SaveFile> {
                     ],
                   );
                 },
-              ),
-            ),
-
-            //Cancel button
-
-            //MyAppDb(),
-
-            SizedBox(
-              height: 200,
-              child: Expanded(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: existingFiles.length,
-                  itemBuilder: (context, index) {
-                    final file = existingFiles[index];
-                    return Expanded(
-                      child: Row(
-                        children: [
-                          Expanded(child: Text(file['file_name'])),
-                          Expanded(
-                              child: Text(
-                                  "Size: ${(file['file_size'] / (1024 * 1024)).toStringAsFixed(2)} MB")),
-                          Expanded(child: Text(file['download_date'])),
-                          IconButton(
-                            onPressed: () async {
-                              String filePath =
-                                  '${(await getExternalStorageDirectory())!.path}/${file['file_name']}';
-                              _deleteFile(filePath, file['id']);
-                            },
-                            icon: Icon(Icons.delete),
-                          ),
-                          IconButton(
-                            onPressed: () {
-                              //print(file['file_name']);
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      PdfViewerImp(fileName: file['file_name']),
-                                ),
-                              );
-
-                              //   String filePath =
-                              //       '${(await getExternalStorageDirectory())!.path}/${file['file_name']}';
-                              //   _deleteFile(filePath, file['id']);
-                            },
-                            icon: Icon(Icons.open_in_new_sharp),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
               ),
             ),
           ],

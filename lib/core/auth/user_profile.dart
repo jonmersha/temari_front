@@ -1,14 +1,14 @@
-import 'dart:convert';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:temari/core/auth/data/UserModel.dart';
 import 'package:temari/core/auth/data/network_access.dart';
 import 'package:temari/core/auth/edit_user.dart';
+import 'package:temari/features/service_provider/provider_home.dart';
+import 'package:temari/features/service_provider/service_provider_customer.dart';
 
 class UserProfile extends StatefulWidget {
   final User userData;
-
   const UserProfile({super.key, required this.userData});
 
   @override
@@ -16,15 +16,61 @@ class UserProfile extends StatefulWidget {
 }
 
 class _CurrencyListState extends State<UserProfile> {
-  bool isCurrencyLoaded = false;
+  bool isUserLoaded = false;
   late Future<List<dynamic>> userData;
 
-  //FirebaseAuth auth=FirebaseAuth.instance;
+  //getting the users
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn googleSignIn = GoogleSignIn();
+  User? _user;
+
+  Future<User?> signInWithGoogle() async {
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+      await googleUser.authentication;
+
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final UserCredential userCredential =
+      await _auth.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      setState(() {
+        _user = user;
+        _checkIfUserSignedIn();
+      });
+
+      return user;
+    }
+    return null;
+  }
+
+  Future<void> signOutGoogle() async {
+    await googleSignIn.signOut();
+    setState(() {
+      _user = null;
+    });
+  }
+
+  Future<void> _checkIfUserSignedIn() async {
+    // Check if a user is already signed in
+    User? currentUser = _auth.currentUser;
+    if (currentUser != null) {
+      setState(() {
+        _user = currentUser;
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    if (!isCurrencyLoaded) {
+    _checkIfUserSignedIn();
+    if (!isUserLoaded) {
       userData = getUsers(widget.userData.email);
     }
   }
@@ -38,7 +84,7 @@ class _CurrencyListState extends State<UserProfile> {
           IconButton(
               onPressed: () {
                 setState(() {
-                  userData = getUsers(widget.userData!.email);
+                  userData = getUsers(widget.userData.email);
                 });
               },
               icon: const Icon(Icons.refresh))
@@ -50,10 +96,8 @@ class _CurrencyListState extends State<UserProfile> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return const Center(child: Text('Error: Check Your Connection'));
+            return const Center(child: Text('Sorry but error connecting to your service please check you connection'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            //Create user Accounts
-
             return Center(
                 child: ElevatedButton(
                     onPressed: () {
@@ -64,17 +108,24 @@ class _CurrencyListState extends State<UserProfile> {
                         "password_hash": 'lskjdfhoihntdouweyhbrpuqxw45',
                       };
                       // print(userData);
-                      register('post/data/19', userData);
+                      register('4', userData);
+                      Navigator.pop(context);
+
                     },
                     child: const Text('Create Your Account')));
           }
-          isCurrencyLoaded = true;
+          isUserLoaded = true;
           final userData = snapshot.data!;
           List<UserModel> users =
               userData.map(((e) => UserModel.fromJson(e))).toList();
           UserModel user = users[0];
+          return SingleChildScrollView(child: Column(
+            children: [
+              UpdateUserForm(userData: user,google:widget.userData),
+               ServiceProviderCustomer(email: user.email!,usermodel: userData,profileImage:widget.userData.photoURL!)
 
-          return UpdateUserForm(userData: user,google:widget.userData); //SizedBox(child: Text('${user.email}'));
+            ],
+          )); //SizedBox(child: Text('${user.email}'));
         },
       ),
     );

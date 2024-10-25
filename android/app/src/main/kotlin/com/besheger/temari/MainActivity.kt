@@ -1,4 +1,4 @@
-package com.besheger.learn
+package com.besheger.student
 
 import io.flutter.embedding.android.FlutterActivity
 
